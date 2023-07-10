@@ -38,6 +38,7 @@ class AuthController extends StateNotifier<bool> {
     required String email,
     required String password,
     required BuildContext context,
+    
   }) async {
     state = true;
     final res = await _authAPI.login(
@@ -46,10 +47,8 @@ class AuthController extends StateNotifier<bool> {
     );
     state = false;
     res.fold(
-      (l) {
-        showSnackbar(context, l.message);
-      },
-      (r) => print(r.userId),
+       (l) => showSnackbar(context, l.message),
+       (r) => Navigator.push(context, HomeView.route()),
     );
   }
 }
