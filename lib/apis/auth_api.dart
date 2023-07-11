@@ -4,7 +4,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/core.dart';
-import '../core/providers.dart';
 
 final authAPIProvider = Provider((ref) {
   final account = ref.watch(appwriteAccountProvider);
@@ -16,16 +15,23 @@ abstract class IAuthAPI {
     required String email,
     required String password,
   });
-
-  FutureEither<model.Session> login({
-    required String email,
-    required String password,
-  });
+  Future<model.Account?> currentUserAccount();
+  FutureEitherVoid logout();
 }
 
 class AuthAPI implements IAuthAPI {
   final Account _account;
   AuthAPI({required Account account}) : _account = account;
+  @override
+  Future<model.Account?> currentUserAccount() async {
+    try {
+      return await _account.get();
+    } on AppwriteException {
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 
   @override
   FutureEither<model.Account> signUp(
@@ -60,6 +66,24 @@ class AuthAPI implements IAuthAPI {
     } on AppwriteException catch (e, stackTrace) {
       return left(
         Failure(e.message ?? 'Some unexpected error occured', stackTrace),
+      );
+    } catch (e, stackTrace) {
+      return left(
+        Failure(e.toString(), stackTrace),
+      );
+    }
+  }
+
+  @override
+  FutureEither logout() async {
+    try {
+      await _account.deleteSession(
+        sessionId: 'current',
+      );
+      return right(null);
+    } on AppwriteException catch (e, stackTrace) {
+      return left(
+        Failure(e.message ?? 'some unexpected error occurred', stackTrace),
       );
     } catch (e, stackTrace) {
       return left(
